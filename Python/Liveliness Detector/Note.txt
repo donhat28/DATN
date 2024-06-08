@@ -1,0 +1,12 @@
+Face recognition with anti-spoofing YOLOv8
+
+Dataset
+---train
+    - images
+    - labels
+---test
+    - images
+    - labels
+---val
+    - images
+    - labels
