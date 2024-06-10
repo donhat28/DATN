@@ -3,7 +3,9 @@ import cv2
 import tkinter as tk
 from tkinter import ttk, messagebox
 from PIL import Image, ImageTk
-import face_recognition
+import torch
+from torchvision.transforms import transforms
+from facenet_pytorch import InceptionResnetV1, MTCNN, extract_face
 import db
 import psycopg2
 import numpy as np
@@ -17,6 +19,10 @@ class AddFaceApp:
         self.cap = cv2.VideoCapture(0)
         self.model = YOLO("D:\Code\DATN\Python\Liveliness Detector\Model\Liveliness_Detector.pt")
         self.classNames = ["Fake", "Real"]
+
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.resnet = InceptionResnetV1(pretrained='vggface2').eval().to(self.device)
+        self.mtcnn = MTCNN(keep_all=True, device=self.device)
 
         self.create_widgets()
         self.show_video()
@@ -63,14 +69,14 @@ class AddFaceApp:
             if success:
                 if self.is_real_face(frame):
                     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    boxes, _ = self.mtcnn.detect(rgb_frame)
 
-                    face_locations = face_recognition.face_locations(rgb_frame)
-
-                    if face_locations:
-                        face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
-                        if face_encodings:
-                            face_encoding = face_encodings[0]
-                            self.save_face_encoding(username, face_encoding)
+                    if boxes is not None:
+                        box = boxes[0]
+                        face = extract_face(rgb_frame, box)
+                        face_embedding = self.get_face_embedding(face)
+                        if face_embedding is not None:
+                            self.save_face_encoding(username, face_embedding)
                         else:
                             messagebox.showerror("Error","No face encoding found.")
                     else:
@@ -93,6 +99,23 @@ class AddFaceApp:
                     if self.classNames[cls] == 'Real':
                         return True
             return False
+
+    def get_face_embedding(self, face):
+        if face is None:
+            return None
+
+        face_np = face.cpu().numpy()
+        face_np = np.transpose(face_np, (1, 2, 0))
+        face_np = (face_np * 255).astype(np.uint8)
+
+        face_img = Image.fromarray(face_np)
+        face_img = transforms.Resize((160, 160))(face_img)
+        face_img = transforms.ToTensor()(face_img).unsqueeze(0).to(self.device)
+
+        with torch.no_grad():
+            embedding = self.resnet(face_img)
+
+        return embedding.cpu().numpy()
 
     def save_face_encoding(self, username, face_encoding):
         try:
