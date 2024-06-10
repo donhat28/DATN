@@ -1,7 +1,0 @@
-{
-  "DB_NAME": "user_management",
-  "DB_USER": "postgres",
-  "DB_PASSWORD": "Ratlabacham2810",
-  "DB_HOST": "localhost",
-  "DB_PORT": "5432"
-}
