@@ -59,7 +59,7 @@ class FaceLogIn:
         frame_height, frame_width, _ = frame.shape
 
         center_x, center_y = frame_width // 2, frame_height // 2
-
+        
         crop_width, crop_height = 300, 400
         half_crop_width, half_crop_height = crop_width // 2, crop_height // 2
         x1 = max(center_x - half_crop_width, 0)
