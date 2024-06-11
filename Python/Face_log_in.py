@@ -9,6 +9,8 @@ import db
 import numpy as np
 from ultralytics import YOLO
 import math
+import subprocess
+import sys
 
 class FaceLogIn:
     def __init__(self, master):
@@ -30,21 +32,46 @@ class FaceLogIn:
         self.video_frame = ttk.Frame(self.master)
         self.video_frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 
-        self.canvas = tk.Canvas(self.video_frame, width=600, height=400)
-        self.canvas.pack()
+        self.canvas = tk.Canvas(self.video_frame, width=300, height=400)
+        self.canvas.grid(row=0, column=0, padx=0, pady=0)
+
+        self.video_frame.grid_rowconfigure(0, weight=1)
+        self.video_frame.grid_columnconfigure(0, weight=1)
 
         self.button_login = ttk.Button(self.master, text="Login", command=self.login)
         self.button_login.grid(row=1, column=0, padx=20, pady=(5, 20), sticky="ew")
 
+        self.button_acc_login = ttk.Button(self.master, text="Account Login", command=self.open_account_login)
+        self.button_acc_login.grid(row=2, column=0, padx=20, pady=(5, 20), sticky="ew")
+
         self.master.grid_rowconfigure(0, weight=1)
         self.master.grid_rowconfigure(1, weight=0)
+        self.master.grid_rowconfigure(2, weight=0)
         self.master.grid_columnconfigure(0, weight=1)
+
+    def open_account_login(self):
+        subprocess.Popen(["python", "Acc_log_in.py"])
+        sys.exit()
 
     def show_video(self):
         _, frame = self.cap.read()
         frame = cv2.flip(frame, 1)
-        cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+        frame_height, frame_width, _ = frame.shape
+
+        center_x, center_y = frame_width // 2, frame_height // 2
+
+        crop_width, crop_height = 300, 400
+        half_crop_width, half_crop_height = crop_width // 2, crop_height // 2
+        x1 = max(center_x - half_crop_width, 0)
+        y1 = max(center_y - half_crop_height, 0)
+        x2 = min(center_x + half_crop_width, frame_width)
+        y2 = min(center_y + half_crop_height, frame_height)
+        cropped_frame = frame[y1:y2, x1:x2]
+        resized_frame = cv2.resize(cropped_frame, (300, 400))
+
+        cv2image = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGBA)
         img = Image.fromarray(cv2image)
+
         imgtk = ImageTk.PhotoImage(image=img)
         self.canvas.imgtk = imgtk
         self.canvas.create_image(0, 0, anchor=tk.NW, image=imgtk)
@@ -149,6 +176,6 @@ class FaceLogIn:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.geometry("720x530")
+    root.geometry("350x500")
     app = FaceLogIn(root)
     root.mainloop()
