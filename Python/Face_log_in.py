@@ -17,6 +17,11 @@ class FaceLogIn:
         self.master = master
         self.master.title("Face Log-in")
 
+        self.background_image = Image.open("D:\\Code\\DATN\\Images\\BG.jpg")
+        self.background_photo = ImageTk.PhotoImage(self.background_image)
+        self.background_label = tk.Label(master, image=self.background_photo)
+        self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
+
         self.cap = cv2.VideoCapture(0)
         self.model = YOLO("D:\Code\DATN\Python\Liveliness Detector\Model\Liveliness_Detector.pt")
         self.classNames = ["Fake", "Real"]
@@ -95,7 +100,9 @@ class FaceLogIn:
                             if user_id:
                                 username = self.get_username_from_user_id(user_id)
                                 self.record_login_attempt(user_id, True)
-                                messagebox.showinfo("Login Successful", f"Welcome, {username}!")
+                                # messagebox.showinfo("Login Successful", f"Welcome, {username}!")
+                                subprocess.Popen(["python", "main_screen.py"])
+                                sys.exit()
                             else:
                                 self.record_login_attempt(None, False)
                                 messagebox.showerror("Login Failed", "Face not recognized.")

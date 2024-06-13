@@ -1,12 +1,20 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from PIL import Image, ImageTk
 import bcrypt
 import db
+import subprocess
+import sys
 
 class CreateAccountApp:
     def __init__(self, master):
         self.master = master
         self.master.title("Create New Account")
+
+        self.background_image = Image.open("D:\\Code\\DATN\\Images\\BG.jpg")
+        self.background_photo = ImageTk.PhotoImage(self.background_image)
+        self.background_label = tk.Label(master, image=self.background_photo)
+        self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
         self.create_widgets()
 
@@ -33,6 +41,13 @@ class CreateAccountApp:
 
         self.button_create_user = ttk.Button(self.master, text="Create User", command=self.create_user)
         self.button_create_user.grid(row=4, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
+
+        self.button_exit = ttk.Button(self.master, text="Exit", command=self.exit)
+        self.button_exit.grid(row=5, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
+
+    def exit(self):
+        subprocess.Popen(["python", "main_screen.py"])
+        sys.exit()
 
     def hash_password(self, password):
         return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')

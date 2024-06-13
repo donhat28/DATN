@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+from PIL import Image, ImageTk
 import bcrypt
 import db
 import subprocess
@@ -9,6 +10,11 @@ class AccountLogIn:
     def __init__(self, master):
         self.master = master
         self.master.title("Log-in")
+
+        self.background_image = Image.open("D:\\Code\\DATN\\Images\\BG.jpg")
+        self.background_photo = ImageTk.PhotoImage(self.background_image)
+        self.background_label = tk.Label(master, image=self.background_photo)
+        self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
         self.create_widgets()
 
@@ -26,8 +32,8 @@ class AccountLogIn:
         self.login_button = tk.Button(self.master, text="Login", command=self.login_clicked)
         self.login_button.grid(row=2, column=0, columnspan=2, padx=20, pady=(5, 20), sticky="ew")
 
-        self.button_acc_login = tk.Button(self.master, text="Account Login", command=self.open_face_login)
-        self.button_acc_login.grid(row=3, column=0, columnspan=2, padx=20, pady=(5, 20), sticky="ew")
+        self.button_face_login = tk.Button(self.master, text="Face Login", command=self.open_face_login)
+        self.button_face_login.grid(row=3, column=0, columnspan=2, padx=20, pady=(5, 20), sticky="ew")
 
     def open_face_login(self):
         subprocess.Popen(["python", "Face_log_in.py"])
@@ -44,8 +50,10 @@ class AccountLogIn:
             if user_data is not None:
                 user_id, stored_password_hash = user_data
                 if bcrypt.checkpw(password.encode('utf-8'), stored_password_hash.encode('utf-8')):
-                    tk.messagebox.showinfo("Login", "Login successful!")
+                    # tk.messagebox.showinfo("Login", "Login successful!")
                     success = True
+                    subprocess.Popen(["python", "main_screen.py"])
+                    sys.exit()
                 else:
                     tk.messagebox.showerror("Login", "Incorrect password.")
                     success = False

@@ -10,11 +10,18 @@ import db
 import psycopg2
 import numpy as np
 from ultralytics import YOLO
+import subprocess
+import sys
 
 class AddFaceApp:
     def __init__(self, master):
         self.master = master
         self.master.title("Add new Face")
+
+        self.background_image = Image.open("D:\\Code\\DATN\\Images\\BG.jpg")
+        self.background_photo = ImageTk.PhotoImage(self.background_image)
+        self.background_label = tk.Label(master, image=self.background_photo)
+        self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
         self.cap = cv2.VideoCapture(0)
         self.model = YOLO("D:\Code\DATN\Python\Liveliness Detector\Model\Liveliness_Detector.pt")
@@ -31,8 +38,11 @@ class AddFaceApp:
         self.video_frame = ttk.Frame(self.master)
         self.video_frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 
-        self.canvas = tk.Canvas(self.video_frame, width=600, height=400)
-        self.canvas.pack()
+        self.canvas = tk.Canvas(self.video_frame, width=300, height=400)
+        self.canvas.grid(row=0, column=0, padx=0, pady=0)
+
+        self.video_frame.grid_rowconfigure(0, weight=1)
+        self.video_frame.grid_columnconfigure(0, weight=1)
 
         self.label_username = ttk.Label(self.master, text="Username:")
         self.label_username.grid(row=1, column=0, padx=20, pady=(0, 5), sticky="nsew")
@@ -40,19 +50,41 @@ class AddFaceApp:
         self.entry_username.grid(row=2, column=0, padx=20, pady=5, sticky="nsew")
 
         self.button_register_face = ttk.Button(self.master, text="Register", command=self.register_face)
-        self.button_register_face.grid(row=3, column=0, padx=20, pady=(5, 20), sticky="ew")
+        self.button_register_face.grid(row=3, column=0, columnspan=2, padx=20, pady=(5, 20), sticky="ew")
+
+        self.button_exit = ttk.Button(self.master, text="Exit", command=self.exit)
+        self.button_exit.grid(row=4, column=0, columnspan=2, padx=20, pady=(5, 20), sticky="ew")
 
         self.master.grid_rowconfigure(0, weight=1)
         self.master.grid_rowconfigure(1, weight=0)
         self.master.grid_rowconfigure(2, weight=0)
         self.master.grid_rowconfigure(3, weight=0)
+        self.master.grid_rowconfigure(4, weight=0)
         self.master.grid_columnconfigure(0, weight=1)
+
+    def exit(self):
+        subprocess.Popen(["python", "main_screen.py"])
+        sys.exit()
 
     def show_video(self):
         _, frame = self.cap.read()
         frame = cv2.flip(frame, 1)
-        cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+        frame_height, frame_width, _ = frame.shape
+
+        center_x, center_y = frame_width // 2, frame_height // 2
+
+        crop_width, crop_height = 300, 400
+        half_crop_width, half_crop_height = crop_width // 2, crop_height // 2
+        x1 = max(center_x - half_crop_width, 0)
+        y1 = max(center_y - half_crop_height, 0)
+        x2 = min(center_x + half_crop_width, frame_width)
+        y2 = min(center_y + half_crop_height, frame_height)
+        cropped_frame = frame[y1:y2, x1:x2]
+        resized_frame = cv2.resize(cropped_frame, (300, 400))
+
+        cv2image = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGBA)
         img = Image.fromarray(cv2image)
+
         imgtk = ImageTk.PhotoImage(image=img)
         self.canvas.imgtk = imgtk
         self.canvas.create_image(0, 0, anchor=tk.NW, image=imgtk)
@@ -144,6 +176,6 @@ class AddFaceApp:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.geometry("720x530")
+    root.geometry("350x500")
     app = AddFaceApp(root)
     root.mainloop()
